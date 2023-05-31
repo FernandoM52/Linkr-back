@@ -1,5 +1,6 @@
 {
   "name": "projeto19-linkr-back",
+  "type": "module",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -16,9 +17,18 @@
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "joi": "^17.9.2",
-    "pg": "^8.11.0"
+    "pg": "^8.11.0",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FernandoM52/Linkr-back.git"
+  },
+  "bugs": {
+    "url": "https://github.com/FernandoM52/Linkr-back/issues"
+  },
+  "homepage": "https://github.com/FernandoM52/Linkr-back#readme"
 }
