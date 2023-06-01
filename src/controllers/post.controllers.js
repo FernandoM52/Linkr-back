@@ -1,3 +1,4 @@
+import urlMetadata from "url-metadata";
 import { db } from "../database/db.connection.js";
 import { postSchema } from "../schemas/post.schema.js";
 
@@ -7,6 +8,17 @@ export async function newPost(req, res) {
 
   try {
     await postSchema.validateAsync({ link, content });
+    const linkData = await urlMetadata(link);
+
+    // const metadata = linkData.map((m) => (
+    //   {
+    //     title: m.title,
+    //     description: m.description,
+    //     url: m.url,
+    //     image: m.jsonld.image
+      
+    //   }));
+    // console.log(metadata);
 
     const confirm = await db.query(
       `
@@ -31,9 +43,11 @@ export async function newPost(req, res) {
 }
 
 export async function getPost(req, res) {
+  const limit = 20;
   try {
-    const posts = await db.query("SELECT * FROM posts");
-
+    const posts = await db.query(`SELECT * FROM posts
+                                  ORDER BY date DESC LIMIT $1`, [limit]);
+    console.log(posts);
     res.send(posts.rows);
   } catch (err) {
     if (err.details) {
