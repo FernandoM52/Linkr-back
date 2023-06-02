@@ -2,28 +2,39 @@ import urlMetadata from "url-metadata";
 import { db } from "../database/db.connection.js";
 import { postSchema } from "../schemas/post.schema.js";
 
+async function getLinkData(linkData) {
+  try {
+    const result = await urlMetadata(linkData);
+  
+    const data =
+      {
+        url: result.url,
+        title: result.title,
+        description: result.description,
+        image: result.image
+    }
+    
+    return data;
+
+  } catch (err) {
+    console.log(err);
+  }
+}
+
 export async function newPost(req, res) {
   const user = res.locals.user;
   const { link, content } = req.body;
-
+  
   try {
     await postSchema.validateAsync({ link, content });
-    const linkData = await urlMetadata(link);
 
-    // const metadata = linkData.map((m) => (
-    //   {
-    //     title: m.title,
-    //     description: m.description,
-    //     url: m.url,
-    //     image: m.jsonld.image
 
-    //   }));
-    // console.log(metadata);
-
+    const linkData = await getLinkData(link);
     const confirm = await db.query(
       `
-    INSERT INTO posts (user_id, link, content) VALUES ($1, $2, $3) RETURNING *;`,
-      [user.id, link, content]
+   
+    INSERT INTO posts (user_id, link, title, description, image, content) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [user.id, link, linkData.title, linkData.description, linkData.image, content]
     );
 
     if (!confirm) {
@@ -71,6 +82,7 @@ export async function newPost(req, res) {
     //Feat - Fernando 01/06 - Fim
 
     res.status(201).send("Post created successfully");
+
   } catch (err) {
     if (err.details) {
       const errs = err.details.map((detail) => detail.message);
@@ -86,7 +98,7 @@ export async function getPost(req, res) {
   try {
     const posts = await db.query(`SELECT * FROM posts
                                   ORDER BY date DESC LIMIT $1`, [limit]);
-    console.log(posts);
+        
     res.send(posts.rows);
   } catch (err) {
     if (err.details) {
