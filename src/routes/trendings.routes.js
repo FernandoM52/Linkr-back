@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getPostsByHashtag } from "../controllers/tendings.controller.js";
+import { getPostsByHashtag } from "../controllers/trendings.controller.js";
 
 
 const trendingRouter = Router();
