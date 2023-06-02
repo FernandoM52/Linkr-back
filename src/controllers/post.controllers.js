@@ -1,88 +1,47 @@
 import urlMetadata from "url-metadata";
 import { db } from "../database/db.connection.js";
 import { postSchema } from "../schemas/post.schema.js";
-
-async function getLinkData(linkData) {
-  try {
-    const result = await urlMetadata(linkData);
-  
-    const data =
-      {
-        url: result.url,
-        title: result.title,
-        description: result.description,
-        image: result.image
-    }
-    
-    return data;
-
-  } catch (err) {
-    console.log(err);
-  }
-}
+import { createPostDB } from "../repositories/posts.repository.js";
+import { createTrendingDB, getHashtagDB, updateHashCountDB } from "../repositories/trendings.repository.js";
+import { createPostWithHashtagDB } from "../repositories/postsHashtag.repository.js";
 
 export async function newPost(req, res) {
   const user = res.locals.user;
   const { link, content } = req.body;
-  
+
   try {
     await postSchema.validateAsync({ link, content });
 
-
     const linkData = await getLinkData(link);
-    const confirm = await db.query(
-      `
-   
-    INSERT INTO posts (user_id, link, title, description, image, content) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [user.id, link, linkData.title, linkData.description, linkData.image, content]
-    );
 
-    if (!confirm) {
-      res.status(404).send("Não foi possivel publicar um novo post");
-      return;
-    }
-
-    //Feat - Fernando 01/06 - Inicio
+    const confirm = await createPostDB(user.id, link, linkData.title, linkData.description, linkData.image, content);
+    if (!confirm) return res.status(404).send("Não foi possivel publicar um novo post");
     const postId = confirm.rows[0].id;
-    const hashtags = findHashtags(content);
 
+    const hashtags = findHashtags(content);
     if (hashtags?.length > 0) {
       for (const hashtag of hashtags) {
-        const existingHashtag = await db.query(
-          `SELECT * FROM trendings WHERE hashtag = $1;`,
-          [hashtag]
-        );
+        const newHashtag = hashtag.replace("#", "");
+        const existingHashtag = await getHashtagDB(newHashtag);
 
         let hashtagData;
         if (existingHashtag.rows.length === 0) {
-          const postHashtag = await db.query(
-            `INSERT INTO trendings (hashtag) VALUES ($1) RETURNING *;`,
-            [hashtag]
-          );
+          const postHashtag = await createTrendingDB(newHashtag);
           hashtagData = postHashtag.rows[0];
         } else {
           hashtagData = existingHashtag.rows[0];
         }
         const { id, hash_count } = hashtagData;
 
-        await db.query(
-          `INSERT INTO posts_hashtag (posts_id, hashtags_id)
-           VALUES ($1, $2);`,
-          [postId, id]
-        );
+        await createPostWithHashtagDB(postId, id);
 
         const newCount = hash_count + 1;
-        await db.query(
-          `UPDATE trendings SET hash_count = $1 WHERE id = $2;`,
-          [newCount, id]
-        );
+        await updateHashCountDB(newCount, id);
       }
       return res.status(201).send("Post created successfully");
     }
-    //Feat - Fernando 01/06 - Fim
 
     res.status(201).send("Post created successfully");
-
   } catch (err) {
     if (err.details) {
       const errs = err.details.map((detail) => detail.message);
@@ -98,7 +57,7 @@ export async function getPost(req, res) {
   try {
     const posts = await db.query(`SELECT * FROM posts
                                   ORDER BY date DESC LIMIT $1`, [limit]);
-        
+
     res.send(posts.rows);
   } catch (err) {
     if (err.details) {
@@ -107,6 +66,24 @@ export async function getPost(req, res) {
     } else {
       return res.status(500).send("Internal server error");
     }
+  }
+}
+
+async function getLinkData(linkData) {
+  try {
+    const result = await urlMetadata(linkData);
+
+    const data =
+    {
+      url: result.url,
+      title: result.title,
+      description: result.description,
+      image: result.image
+    }
+
+    return data;
+  } catch (err) {
+    console.log(err);
   }
 }
 
