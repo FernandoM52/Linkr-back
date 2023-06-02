@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { getPostsByHashtag } from "../controllers/trendings.controller.js";
+import { getPostsByTrendings } from "../controllers/trendings.controller.js";
 
 
 const trendingRouter = Router();
 
-trendingRouter.get("/hashtag/:hashtag", getPostsByHashtag);
+trendingRouter.get("/hashtag/:hashtag", getPostsByTrendings);
 
 export default trendingRouter;

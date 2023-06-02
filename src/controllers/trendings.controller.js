@@ -1,20 +1,11 @@
-import { db } from "../database/db.connection.js";
+import { getPostsByTrendingsDB } from "../repositories/trendings.repository.js";
 
-export async function getPostsByHashtag() {
-  const { hashtag } = req.params;
-  if (!hashtag) return res.status(404).send("Parâmetro de trending inválido");
-
+export async function getPostsByTrendings(req, res) {
   try {
-    //await getPostsByHashtagDB();
-    const posts = await db.query(
-      `SELECT * FROM posts
-       JOIN posts_hashtag ph ON ph.posts_id = posts.id
-       JOIN trendings t ON t.id = ph.hashtags_id
-       WHERE t.hashtag = $1;`,
-      [hashtag]
-    );
+    const posts = await getPostsByTrendingsDB(req.params);
+    if (posts.length === 0) return res.send("Não há posts com esta hashtag");
 
-    return res.send(posts.rows);
+    res.send(posts);
   } catch (err) {
     res.status(500).send(err.message);
   }
