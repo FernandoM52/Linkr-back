@@ -8,6 +8,11 @@ export async function createTrendingDB(hashtag) {
   return trending;
 }
 
+export async function getTrendingsDB() {
+  const result = await db.query("SELECT * FROM trendings ORDER BY hash_count DESC LIMIT 10;");
+  return result;
+}
+
 export async function getHashtagDB(hashtag) {
   const trending = await db.query(
     `SELECT * FROM trendings WHERE hashtag = $1;`,
