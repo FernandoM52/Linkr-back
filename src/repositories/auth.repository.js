@@ -17,7 +17,7 @@ export async function findUserByEmail(email) {
 
 export async function insertUser(email, name, photo, hashPassword) {
     return db.query(`
-        INSERT INTO users (email,name,photo,password,created_at)
+        INSERT INTO users (email, name, photo, password, created_at)
         VALUES ($1,$2,$3,$4,NOW());
     `, [email, name, photo, hashPassword]);
 }
@@ -27,7 +27,7 @@ export async function insertSession(token,user){
         INSERT INTO sessions 
         (token, user_id, created_at) 
         VALUES ($1, $2,NOW())
-    `,[token,user.rows[0].id]);
+    `,[token, user.rows[0].id]);
 }
 
 export async function deleteSession(user){
