@@ -1,7 +1,7 @@
 import urlMetadata from "url-metadata";
 import { db } from "../database/db.connection.js";
 import { postSchema } from "../schemas/post.schema.js";
-import { createPostDB } from "../repositories/posts.repository.js";
+import { createPostDB, likePostById, getPostId } from "../repositories/posts.repository.js";
 import { createTrendingDB, getHashtagDB, updateHashCountDB } from "../repositories/trendings.repository.js";
 import { createPostWithHashtagDB } from "../repositories/postsHashtag.repository.js";
 
@@ -90,4 +90,36 @@ async function getLinkData(linkData) {
 function findHashtags(content) {
   const regex = /#(\w+)/g;
   return content.match(regex);
+}
+
+export async function likePost(req, res) {
+  const { postId } = req.params;
+  const userId = res.locals.userId;
+
+  try {
+    if (!userId) {
+      return res.status(400).send('User ID is missing');
+    }
+
+    await likePostById(userId, postId);
+    return res.send();
+  } catch (error) {
+    console.log(error.message);
+    return res.status(500).send(error.message);
+  }
+}
+
+export async function getPostById(req, res) {
+  const { id } = req.params
+
+  try {
+      const getPosts = await getPostId(id)
+      console.log(getPosts)
+      return res.send(getPosts.rows)
+  } catch (error) {
+      console.log(error.message)
+      return res.status(500).send(error.message)
+
+  }
+
 }
