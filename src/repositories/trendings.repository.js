@@ -25,9 +25,11 @@ export async function getPostsByTrendingsDB(params) {
   const { hashtag } = params;
 
   const posts = await db.query(
-    `SELECT link, content, title, description, image, likes_count, date FROM posts
+    `SELECT link, content, title, description, image, likes_count, date, users.name, users.photo
+     FROM posts
      JOIN posts_hashtag ph ON ph.posts_id = posts.id
      JOIN trendings t ON t.id = ph.hashtags_id
+     JOIN users ON users.id = posts.user_id
      WHERE t.hashtag = $1
      ORDER BY date;`,
     [hashtag.replace("#", "")]
