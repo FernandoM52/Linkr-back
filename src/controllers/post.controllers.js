@@ -13,7 +13,6 @@ export async function newPost(req, res) {
     await postSchema.validateAsync({ link, content });
 
     const linkData = await getLinkData(link);
-    console.log(linkData)
 
     const confirm = await createPostDB(user.id, link, linkData.title, linkData.description, linkData.image, content);
     if (!confirm) return res.status(404).send("Não foi possivel publicar um novo post");
@@ -95,14 +94,14 @@ function findHashtags(content) {
 
 export async function likePost(req, res) {
   const { postId } = req.params;
-  const userId = res.locals.userId;
+  const { id } = res.locals.user;
 
   try {
-    if (!userId) {
+    if (!id) {
       return res.status(400).send('User ID is missing');
     }
 
-    await likePostById(userId, postId);
+    await likePostById(id, postId);
     return res.send();
   } catch (error) {
     console.log(error.message);
@@ -114,12 +113,12 @@ export async function getPostById(req, res) {
   const { id } = req.params
 
   try {
-      const getPosts = await getPostId(id)
-      console.log(getPosts)
-      return res.send(getPosts.rows)
+    const getPosts = await getPostId(id)
+    console.log(getPosts)
+    return res.send(getPosts.rows)
   } catch (error) {
-      console.log(error.message)
-      return res.status(500).send(error.message)
+    console.log(error.message)
+    return res.status(500).send(error.message)
 
   }
 
