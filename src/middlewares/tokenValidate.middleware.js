@@ -21,7 +21,7 @@ export async function tokenValidate(req, res, next) {
 
     const userId = rows[0].user_id;
     const { rows: users } = await db.query(
-      `SELECT * FROM users WHERE id = $1`,
+      `SELECT users.id, users.name, users.photo FROM users WHERE id = $1`,
       [userId]
     );
 
@@ -30,7 +30,7 @@ export async function tokenValidate(req, res, next) {
       return;
     }
 
-    res.locals.userId = users[0]; // Armazena o ID do usuário em res.locals.userId
+    res.locals.user = users[0]; // Armazena o id, nome e foto do usuário no locals
     next();
   } catch (err) {
     res.status(500).send(err.message);

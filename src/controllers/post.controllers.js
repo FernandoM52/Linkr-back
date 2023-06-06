@@ -6,7 +6,7 @@ import { createTrendingDB, getHashtagDB, updateHashCountDB } from "../repositori
 import { createPostWithHashtagDB } from "../repositories/postsHashtag.repository.js";
 
 export async function newPost(req, res) {
-  const user = res.locals.userId;
+  const user = res.locals.user;
   const { link, content } = req.body;
 
   try {
@@ -94,14 +94,14 @@ function findHashtags(content) {
 
 export async function likePost(req, res) {
   const { postId } = req.params;
-  const userId = res.locals.userId;
+  const { id } = res.locals.user;
 
   try {
-    if (!userId) {
+    if (!id) {
       return res.status(400).send('User ID is missing');
     }
 
-    await likePostById(userId, postId);
+    await likePostById(id, postId);
     return res.send();
   } catch (error) {
     console.log(error.message);
