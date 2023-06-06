@@ -6,14 +6,13 @@ import { createTrendingDB, getHashtagDB, updateHashCountDB } from "../repositori
 import { createPostWithHashtagDB } from "../repositories/postsHashtag.repository.js";
 
 export async function newPost(req, res) {
-  const user = res.locals.user;
+  const user = res.locals.userId;
   const { link, content } = req.body;
 
   try {
     await postSchema.validateAsync({ link, content });
 
     const linkData = await getLinkData(link);
-    console.log(linkData)
 
     const confirm = await createPostDB(user.id, link, linkData.title, linkData.description, linkData.image, content);
     if (!confirm) return res.status(404).send("Não foi possivel publicar um novo post");
@@ -114,12 +113,12 @@ export async function getPostById(req, res) {
   const { id } = req.params
 
   try {
-      const getPosts = await getPostId(id)
-      console.log(getPosts)
-      return res.send(getPosts.rows)
+    const getPosts = await getPostId(id)
+    console.log(getPosts)
+    return res.send(getPosts.rows)
   } catch (error) {
-      console.log(error.message)
-      return res.status(500).send(error.message)
+    console.log(error.message)
+    return res.status(500).send(error.message)
 
   }
 

@@ -30,7 +30,7 @@ export async function tokenValidate(req, res, next) {
       return;
     }
 
-    res.locals.userId = users[0].id; // Armazena o ID do usuário em res.locals.userId
+    res.locals.userId = users[0]; // Armazena o ID do usuário em res.locals.userId
     next();
   } catch (err) {
     res.status(500).send(err.message);
