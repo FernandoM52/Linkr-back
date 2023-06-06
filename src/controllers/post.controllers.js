@@ -13,6 +13,7 @@ export async function newPost(req, res) {
     await postSchema.validateAsync({ link, content });
 
     const linkData = await getLinkData(link);
+    console.log(linkData)
 
     const confirm = await createPostDB(user.id, link, linkData.title, linkData.description, linkData.image, content);
     if (!confirm) return res.status(404).send("Não foi possivel publicar um novo post");
