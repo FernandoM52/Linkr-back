@@ -1,4 +1,4 @@
-import { getPostsByTrendingsDB, getTrendingsDB } from "../repositories/trendings.repository.js";
+import { getPostsByTrendingDB, getTrendingsDB } from "../repositories/trendings.repository.js";
 
 export async function getTrendings(req, res) {
   try {
@@ -9,9 +9,9 @@ export async function getTrendings(req, res) {
   }
 }
 
-export async function getPostsByTrendings(req, res) {
+export async function getPostsByTrending(req, res) {
   try {
-    const posts = await getPostsByTrendingsDB(req.params);
+    const posts = await getPostsByTrendingDB(req.params, req.query);
     res.send(posts);
   } catch (err) {
     res.status(500).send(err.message);

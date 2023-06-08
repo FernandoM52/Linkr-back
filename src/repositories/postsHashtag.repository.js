@@ -7,3 +7,10 @@ export async function createPostWithHashtagDB(postId, id) {
     [postId, id]
   );
 }
+
+export async function getPostsWithHashtag(postId, id) {
+  await db.query(
+    `SELECT * FROM posts;`,
+    [postId, id]
+  );
+}
