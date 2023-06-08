@@ -89,6 +89,7 @@ export async function getPost(req, res) {
     }
   }
 }
+
 export async function deletePost(req, res) {
   const { id } = req.params;
   const user = res.locals.user;
@@ -99,13 +100,14 @@ export async function deletePost(req, res) {
       `SELECT user_id, id FROM posts WHERE user_id = $1 and id = $2`,
       [user.id, id]
     );
-    console.log(verifyOwner);
     if (!verifyOwner.rowCount) return res.sendStatus(401);
-    const deletePost = await db.query(`DELETE FROM posts WHERE id=$1`, [id]);
+    await db.query(`DELETE FROM posts_hashtag WHERE posts_id = $1`, [id]);
+    const deletePost = await db.query(`DELETE FROM posts WHERE id = $1;`, [id]);
     if (!deletePost.rowCount) return res.sendStatus(400);
 
     res.sendStatus(200);
   } catch (err) {
+    console.error(err);
     if (err.details) {
       const errs = err.details.map((detail) => detail.message);
       return res.status(422).send(errs);
@@ -159,10 +161,8 @@ export async function getPostById(req, res) {
 
   try {
     const getPosts = await getPostId(id);
-    console.log(getPosts);
     return res.send(getPosts.rows);
   } catch (error) {
-    console.log(error.message);
     return res.status(500).send(error.message);
   }
 }
@@ -174,7 +174,6 @@ export async function getPostByUser(req, res) {
     const getUserPosts = await getPostByUserId(id);
     return res.send(getUserPosts.rows);
   } catch (error) {
-    console.log(error.message);
     return res.status(500).send(error.message);
   }
 }
