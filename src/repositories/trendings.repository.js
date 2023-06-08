@@ -21,18 +21,22 @@ export async function getHashtagDB(hashtag) {
   return trending;
 }
 
-export async function getPostsByTrendingsDB(params) {
+export async function getPostsByTrendingDB(params, query) {
   const { hashtag } = params;
+  const { page } = query;
+  const PAGE_SIZE = 10;
+  const offset = (page - 1) * PAGE_SIZE;
 
   const posts = await db.query(
-    `SELECT link, content, title, description, image, likes_count, date, users.name, users.photo
-     FROM posts
-     JOIN posts_hashtag ph ON ph.posts_id = posts.id
-     JOIN trendings t ON t.id = ph.hashtags_id
-     JOIN users ON users.id = posts.user_id
-     WHERE t.hashtag = $1
-     ORDER BY date;`,
-    [hashtag.replace("#", "")]
+    `SELECT p.*, u.name as "userName", u.photo as "userPhoto"
+      FROM posts AS p
+      JOIN posts_hashtag AS ph ON p.id = ph.posts_id
+      JOIN trendings AS t ON ph.hashtags_id = t.id
+      JOIN users AS u ON u.id = p.user_id
+      WHERE t.hashtag = $1
+      ORDER BY p.date DESC
+      LIMIT $2 OFFSET $3;`,
+    [hashtag, Number(PAGE_SIZE), Number(offset)]
   );
   return posts.rows;
 }
