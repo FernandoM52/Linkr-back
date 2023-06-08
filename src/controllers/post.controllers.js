@@ -161,10 +161,8 @@ export async function getPostById(req, res) {
 
   try {
     const getPosts = await getPostId(id);
-    console.log(getPosts);
     return res.send(getPosts.rows);
   } catch (error) {
-    console.log(error.message);
     return res.status(500).send(error.message);
   }
 }
@@ -176,7 +174,6 @@ export async function getPostByUser(req, res) {
     const getUserPosts = await getPostByUserId(id);
     return res.send(getUserPosts.rows);
   } catch (error) {
-    console.log(error.message);
     return res.status(500).send(error.message);
   }
 }
