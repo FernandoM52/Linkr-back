@@ -16,30 +16,44 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+ALTER TABLE IF EXISTS ONLY public.shares DROP CONSTRAINT IF EXISTS shares_user_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.shares DROP CONSTRAINT IF EXISTS shares_post_id_fkey;
 ALTER TABLE IF EXISTS ONLY public.sessions DROP CONSTRAINT IF EXISTS sessions_user_id_fkey;
 ALTER TABLE IF EXISTS ONLY public.posts DROP CONSTRAINT IF EXISTS posts_user_id_fkey;
 ALTER TABLE IF EXISTS ONLY public.posts_hashtag DROP CONSTRAINT IF EXISTS posts_hashtag_posts_id_fkey;
 ALTER TABLE IF EXISTS ONLY public.posts_hashtag DROP CONSTRAINT IF EXISTS posts_hashtag_hashtags_id_fkey;
 ALTER TABLE IF EXISTS ONLY public.likes DROP CONSTRAINT IF EXISTS likes_user_id_fkey;
 ALTER TABLE IF EXISTS ONLY public.likes DROP CONSTRAINT IF EXISTS likes_post_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.follows DROP CONSTRAINT IF EXISTS follows_following_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.follows DROP CONSTRAINT IF EXISTS follows_follower_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.comments DROP CONSTRAINT IF EXISTS comments_user_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.comments DROP CONSTRAINT IF EXISTS comments_post_id_fkey;
 ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_pkey;
 ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_email_key;
 ALTER TABLE IF EXISTS ONLY public.trendings DROP CONSTRAINT IF EXISTS trendings_pkey;
+ALTER TABLE IF EXISTS ONLY public.shares DROP CONSTRAINT IF EXISTS shares_pkey;
 ALTER TABLE IF EXISTS ONLY public.sessions DROP CONSTRAINT IF EXISTS sessions_token_key;
 ALTER TABLE IF EXISTS ONLY public.sessions DROP CONSTRAINT IF EXISTS sessions_pkey;
 ALTER TABLE IF EXISTS ONLY public.posts DROP CONSTRAINT IF EXISTS posts_pkey;
 ALTER TABLE IF EXISTS ONLY public.posts_hashtag DROP CONSTRAINT IF EXISTS posts_hashtag_pkey;
 ALTER TABLE IF EXISTS ONLY public.likes DROP CONSTRAINT IF EXISTS likes_pkey;
+ALTER TABLE IF EXISTS ONLY public.follows DROP CONSTRAINT IF EXISTS follows_pkey;
+ALTER TABLE IF EXISTS ONLY public.comments DROP CONSTRAINT IF EXISTS comments_pkey;
 ALTER TABLE IF EXISTS public.users ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.trendings ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.shares ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.sessions ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.posts_hashtag ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.posts ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.likes ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.follows ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.comments ALTER COLUMN id DROP DEFAULT;
 DROP SEQUENCE IF EXISTS public.users_id_seq;
 DROP TABLE IF EXISTS public.users;
 DROP SEQUENCE IF EXISTS public.trendings_id_seq;
 DROP TABLE IF EXISTS public.trendings;
+DROP SEQUENCE IF EXISTS public.shares_id_seq;
+DROP TABLE IF EXISTS public.shares;
 DROP SEQUENCE IF EXISTS public.sessions_id_seq;
 DROP TABLE IF EXISTS public.sessions;
 DROP SEQUENCE IF EXISTS public.posts_id_seq;
@@ -48,6 +62,10 @@ DROP TABLE IF EXISTS public.posts_hashtag;
 DROP TABLE IF EXISTS public.posts;
 DROP SEQUENCE IF EXISTS public.likes_id_seq;
 DROP TABLE IF EXISTS public.likes;
+DROP SEQUENCE IF EXISTS public.follows_id_seq;
+DROP TABLE IF EXISTS public.follows;
+DROP SEQUENCE IF EXISTS public.comments_id_seq;
+DROP TABLE IF EXISTS public.comments;
 DROP SCHEMA IF EXISTS public;
 --
 -- Name: public; Type: SCHEMA; Schema: -; Owner: -
@@ -66,6 +84,71 @@ COMMENT ON SCHEMA public IS 'standard public schema';
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: comments; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.comments (
+    id integer NOT NULL,
+    user_id integer NOT NULL,
+    post_id integer NOT NULL,
+    content text NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: comments_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.comments_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: comments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.comments_id_seq OWNED BY public.comments.id;
+
+
+--
+-- Name: follows; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.follows (
+    id integer NOT NULL,
+    follower_id integer NOT NULL,
+    following_id integer NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: follows_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.follows_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: follows_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.follows_id_seq OWNED BY public.follows.id;
+
 
 --
 -- Name: likes; Type: TABLE; Schema: public; Owner: -
@@ -200,6 +283,38 @@ ALTER SEQUENCE public.sessions_id_seq OWNED BY public.sessions.id;
 
 
 --
+-- Name: shares; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.shares (
+    id integer NOT NULL,
+    user_id integer NOT NULL,
+    post_id integer NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: shares_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.shares_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: shares_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.shares_id_seq OWNED BY public.shares.id;
+
+
+--
 -- Name: trendings; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -265,6 +380,20 @@ ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
 
 --
+-- Name: comments id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.comments ALTER COLUMN id SET DEFAULT nextval('public.comments_id_seq'::regclass);
+
+
+--
+-- Name: follows id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.follows ALTER COLUMN id SET DEFAULT nextval('public.follows_id_seq'::regclass);
+
+
+--
 -- Name: likes id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -293,6 +422,13 @@ ALTER TABLE ONLY public.sessions ALTER COLUMN id SET DEFAULT nextval('public.ses
 
 
 --
+-- Name: shares id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shares ALTER COLUMN id SET DEFAULT nextval('public.shares_id_seq'::regclass);
+
+
+--
 -- Name: trendings id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -307,12 +443,28 @@ ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_
 
 
 --
+-- Data for Name: comments; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+
+
+--
+-- Data for Name: follows; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+
+
+--
 -- Data for Name: likes; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 INSERT INTO public.likes VALUES (24, 11, 10, '2023-06-05 03:52:57.240387');
 INSERT INTO public.likes VALUES (25, 11, 1, '2023-06-05 03:58:43.674059');
 INSERT INTO public.likes VALUES (30, 11, 15, '2023-06-05 04:53:34.734226');
+INSERT INTO public.likes VALUES (36, 12, 114, '2023-06-09 22:03:39.265103');
+INSERT INTO public.likes VALUES (47, 12, 122, '2023-06-09 22:44:28.709754');
+INSERT INTO public.likes VALUES (48, 12, 136, '2023-06-09 22:45:11.419643');
+INSERT INTO public.likes VALUES (51, 12, 123, '2023-06-09 22:52:43.41181');
 
 
 --
@@ -412,7 +564,31 @@ INSERT INTO public.posts VALUES (100, 19, 'https://github.com/FernandoM52/Linkr-
 INSERT INTO public.posts VALUES (101, 19, 'https://github.com/FernandoM52/Linkr-back', 'Testando criação de posts após refatorar controller newPost, agora com hashtag #node', '2023-06-02 18:33:45.542452', 0, '', 'Contribute to FernandoM52/Linkr-back development by creating an account on GitHub.', '');
 INSERT INTO public.posts VALUES (104, 6, 'https://g1.globo.com/mundo/noticia/2023/06/02/trem-descarrilha-na-india.ghtml', 'gatos amassam pãozinho', '2023-06-03 00:20:10.700346', 0, 'Trem descarrila na Índia e deixa 207 mortos', 'A colisão aconteceu após o trem Coromandel Express bater de frente com um trem de carga, disseram autoridades locais', 'https://s2-g1.glbimg.com/AhiHmvIZrRe29Fi0G-47BEmLvK8=/1200x/smart/filters:cover():strip_icc()/s03.video.glbimg.com/x720/11669786.jpg');
 INSERT INTO public.posts VALUES (105, 6, 'https://g1.globo.com/mundo/noticia/2023/06/02/trem-descarrilha-na-india.ghtml', 'gatos amassam pãozinho', '2023-06-03 02:17:42.646312', 0, 'Trem descarrila na Índia e deixa 233 mortos', 'A colisão aconteceu após o trem Coromandel Express bater de frente com um trem de carga, disseram autoridades locais', 'https://s2-g1.glbimg.com/AhiHmvIZrRe29Fi0G-47BEmLvK8=/1200x/smart/filters:cover():strip_icc()/s03.video.glbimg.com/x720/11669786.jpg');
+INSERT INTO public.posts VALUES (117, 12, 'https://www.youtube.com/', 'Subindo trending node para testar infinite scroll #node', '2023-06-07 14:41:08.064173', 0, '', 'Enjoy the videos and music you love, upload original content, and share it all with friends, family, and the world on YouTube.', '');
+INSERT INTO public.posts VALUES (118, 12, 'https://www.twitch.tv/gaules', 'Subindo trending node para testar infinite scroll #node
+
+', '2023-06-07 14:42:52.168725', 0, 'Gaules - Twitch', 'IMPERIAL vs Vitality BLAST Premier Spring Final 2023 - !Sorteio Siga @Gaules nas redes sociais.', '');
+INSERT INTO public.posts VALUES (119, 12, 'https://www.twitch.tv/gaules', 'Subindo trending node para testar infinite scroll #node
+Testando post description grandeeeeee tmbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+dosadpoaskdoasdopskdasopkdasok
+pdfláspdlaspásd', '2023-06-07 14:43:39.368835', 0, 'Gaules - Twitch', 'IMPERIAL vs Vitality BLAST Premier Spring Final 2023 - !Sorteio Siga @Gaules nas redes sociais.', '');
+INSERT INTO public.posts VALUES (120, 12, 'https://www.twitch.tv/gaules', 'Layout do post com uma descrição grande parece estar rodando bem  #css #react #node', '2023-06-07 14:45:19.266346', 0, 'Gaules - Twitch', 'IMPERIAL vs Vitality BLAST Premier Spring Final 2023 - !Sorteio Siga @Gaules nas redes sociais.', '');
+INSERT INTO public.posts VALUES (121, 12, 'https://www.twitch.tv/gaules', 'Subindo trending "node" para testar infinite scroll #node', '2023-06-07 14:47:08.264235', 0, 'Gaules - Twitch', 'IMPERIAL vs Vitality BLAST Premier Spring Final 2023 - !Sorteio Siga @Gaules nas redes sociais.', '');
+INSERT INTO public.posts VALUES (122, 12, 'https://www.twitch.tv/gaules', 'Subindo trending node para testar infinite scroll #node
+', '2023-06-07 14:47:18.067742', 0, 'Gaules - Twitch', 'IMPERIAL vs Vitality BLAST Premier Spring Final 2023 - !Sorteio Siga @Gaules nas redes sociais.', '');
 INSERT INTO public.posts VALUES (15, 6, 'https://www.uol.com.br/tilt/noticias/redacao/2022/12/13/por-que-os-gatos-amassam-paozinho-a-ciencia-tem-uma-resposta-curiosa.htm', 'S2', '2023-06-01 01:22:32.10386', 1, NULL, NULL, NULL);
+INSERT INTO public.posts VALUES (106, 12, 'https://www.linuxtips.io/', 'awsome! #linux', '2023-06-06 16:50:12.779019', 0, '', 'Encontre na LINUXtips treinamentos especializados em Linux, Kubernetes, Python, Terraform, Ansible, AWS, GitLab e muito mais. Prepare-se para se tornar um especialista em DevOps com a nossa trilha completa de aprendizado', '');
+INSERT INTO public.posts VALUES (107, 12, 'https://g1.globo.com/mundo/noticia/2023/06/02/trem-descarrilha-na-india.ghtml', 'TEste', '2023-06-06 16:51:31.606003', 0, 'Trem descarrila na Índia e deixa 288 mortos', 'A colisão aconteceu após o trem Coromandel Express bater de frente com um trem de carga, disseram autoridades locais', 'https://s2-g1.glbimg.com/AhiHmvIZrRe29Fi0G-47BEmLvK8=/1200x/smart/filters:cover():strip_icc()/s03.video.glbimg.com/x720/11669786.jpg');
+INSERT INTO public.posts VALUES (108, 12, 'https://g1.globo.com/mundo/noticia/2023/06/02/trem-descarrilha-na-india.ghtml', 'testando 2', '2023-06-06 16:57:42.019178', 0, 'Trem descarrila na Índia e deixa 288 mortos', 'A colisão aconteceu após o trem Coromandel Express bater de frente com um trem de carga, disseram autoridades locais', 'https://s2-g1.glbimg.com/AhiHmvIZrRe29Fi0G-47BEmLvK8=/1200x/smart/filters:cover():strip_icc()/s03.video.glbimg.com/x720/11669786.jpg');
+INSERT INTO public.posts VALUES (109, 12, 'https://g1.globo.com/mundo/noticia/2023/06/02/trem-descarrilha-na-india.ghtml', 'Testando 3', '2023-06-06 17:10:56.964032', 0, 'Trem descarrila na Índia e deixa 288 mortos', 'A colisão aconteceu após o trem Coromandel Express bater de frente com um trem de carga, disseram autoridades locais', 'https://s2-g1.glbimg.com/AhiHmvIZrRe29Fi0G-47BEmLvK8=/1200x/smart/filters:cover():strip_icc()/s03.video.glbimg.com/x720/11669786.jpg');
+INSERT INTO public.posts VALUES (110, 12, 'https://g1.globo.com/mundo/noticia/2023/06/02/trem-descarrilha-na-india.ghtml', 'TEstando 4', '2023-06-06 17:15:00.828835', 0, 'Trem descarrila na Índia e deixa 288 mortos', 'A colisão aconteceu após o trem Coromandel Express bater de frente com um trem de carga, disseram autoridades locais', 'https://s2-g1.glbimg.com/AhiHmvIZrRe29Fi0G-47BEmLvK8=/1200x/smart/filters:cover():strip_icc()/s03.video.glbimg.com/x720/11669786.jpg');
+INSERT INTO public.posts VALUES (111, 12, 'https://github.com/FernandoM52/Linkr-front', 'testando 5 #node', '2023-06-06 17:16:10.611723', 0, '', 'Contribute to FernandoM52/Linkr-front development by creating an account on GitHub.', '');
+INSERT INTO public.posts VALUES (112, 12, 'https://g1.globo.com/mundo/noticia/2023/06/02/trem-descarrilha-na-india.ghtml', 'TEste com deploy', '2023-06-06 17:41:47.096365', 0, 'Trem descarrila na Índia e deixa 288 mortos', 'A colisão aconteceu após o trem Coromandel Express bater de frente com um trem de carga, disseram autoridades locais', 'https://s2-g1.glbimg.com/AhiHmvIZrRe29Fi0G-47BEmLvK8=/1200x/smart/filters:cover():strip_icc()/s03.video.glbimg.com/x720/11669786.jpg');
+INSERT INTO public.posts VALUES (113, 12, 'https://g1.globo.com/mundo/noticia/2023/06/02/trem-descarrilha-na-india.ghtml', 'TEste com deploy dasdsa', '2023-06-06 17:48:58.642368', 0, 'Trem descarrila na Índia e deixa 288 mortos', 'A colisão aconteceu após o trem Coromandel Express bater de frente com um trem de carga, disseram autoridades locais', 'https://s2-g1.glbimg.com/AhiHmvIZrRe29Fi0G-47BEmLvK8=/1200x/smart/filters:cover():strip_icc()/s03.video.glbimg.com/x720/11669786.jpg');
+INSERT INTO public.posts VALUES (114, 12, 'https://g1.globo.com/mundo/noticia/2023/06/02/trem-descarrilha-na-india.ghtml', 'Testando deploy #javascript', '2023-06-06 18:00:32.73011', 0, 'Trem descarrila na Índia e deixa 288 mortos', 'A colisão aconteceu após o trem Coromandel Express bater de frente com um trem de carga, disseram autoridades locais', 'https://s2-g1.glbimg.com/AhiHmvIZrRe29Fi0G-47BEmLvK8=/1200x/smart/filters:cover():strip_icc()/s03.video.glbimg.com/x720/11669786.jpg');
+INSERT INTO public.posts VALUES (136, 6, 'https://www.linuxtips.io/', 'link fera #linux #linuxtips', '2023-06-09 21:24:12.100645', 1, '', 'Encontre na LINUXtips treinamentos especializados em Linux, Kubernetes, Python, Terraform, Ansible, AWS, GitLab e muito mais. Prepare-se para se tornar um especialista em DevOps com a nossa trilha completa de aprendizado', '');
+INSERT INTO public.posts VALUES (132, 12, 'https://www.youtube.com/', 'Testando publish após refatorar Homepage', '2023-06-09 04:59:27.430249', 0, '', 'Aproveite vídeos e músicas que você ama, envie e compartilhe conteúdo original com amigos, parentes e o mundo no YouTube.', '');
+INSERT INTO public.posts VALUES (123, 12, 'https://www.twitch.tv/gaules', 'Subindo trending node para testar infinite scroll #node', '2023-06-07 14:47:34.768225', 0, 'Gaules - Twitch', 'IMPERIAL vs Vitality BLAST Premier Spring Final 2023 - !Sorteio Siga @Gaules nas redes sociais.', '');
 
 
 --
@@ -433,6 +609,20 @@ INSERT INTO public.posts_hashtag VALUES (11, 97, 13);
 INSERT INTO public.posts_hashtag VALUES (12, 98, 1);
 INSERT INTO public.posts_hashtag VALUES (13, 99, 10);
 INSERT INTO public.posts_hashtag VALUES (14, 101, 9);
+INSERT INTO public.posts_hashtag VALUES (15, 106, 14);
+INSERT INTO public.posts_hashtag VALUES (16, 111, 9);
+INSERT INTO public.posts_hashtag VALUES (17, 114, 1);
+INSERT INTO public.posts_hashtag VALUES (19, 117, 9);
+INSERT INTO public.posts_hashtag VALUES (20, 118, 9);
+INSERT INTO public.posts_hashtag VALUES (21, 119, 9);
+INSERT INTO public.posts_hashtag VALUES (22, 120, 7);
+INSERT INTO public.posts_hashtag VALUES (23, 120, 2);
+INSERT INTO public.posts_hashtag VALUES (24, 120, 9);
+INSERT INTO public.posts_hashtag VALUES (25, 121, 9);
+INSERT INTO public.posts_hashtag VALUES (26, 122, 9);
+INSERT INTO public.posts_hashtag VALUES (27, 123, 9);
+INSERT INTO public.posts_hashtag VALUES (34, 136, 14);
+INSERT INTO public.posts_hashtag VALUES (35, 136, 15);
 
 
 --
@@ -443,13 +633,19 @@ INSERT INTO public.sessions VALUES (1, 'f47d5eeb-7e52-4f40-b2d7-e16b65afe8bc', 1
 INSERT INTO public.sessions VALUES (2, '7a302e05-31a2-4515-85eb-48ec0b070c69', 2, '2023-05-31 04:06:35.723842');
 INSERT INTO public.sessions VALUES (3, '8e823270-5fc9-43b7-b8e5-50353d2fa74d', 3, '2023-05-31 04:13:35.74894');
 INSERT INTO public.sessions VALUES (4, 'b34f5a37-db3e-48ca-a381-3cff9c991bb1', 4, '2023-05-31 04:16:16.908324');
-INSERT INTO public.sessions VALUES (6, 'cbce4fd6-899a-467f-a197-8399da370fb2', 6, '2023-05-31 22:45:46.348012');
+INSERT INTO public.sessions VALUES (118, 'a771800d-44de-412b-bc22-9752b56bd00a', 5, '2023-06-08 07:43:45.620012');
 INSERT INTO public.sessions VALUES (7, '302f9c02-35f5-4886-8460-7ea0f7809c53', 9, '2023-06-01 18:34:23.025885');
 INSERT INTO public.sessions VALUES (8, 'b6bb5ee8-2c0e-432e-b987-6cc3a52cd8f4', 10, '2023-06-01 18:49:46.825545');
+INSERT INTO public.sessions VALUES (126, 'b4905189-c69e-49d6-b45a-ee19ce6923e4', 6, '2023-06-09 21:22:55.481768');
+INSERT INTO public.sessions VALUES (128, 'a603ea1d-e5e9-4b67-9fd9-520974a591f6', 12, '2023-06-09 22:52:31.737916');
 INSERT INTO public.sessions VALUES (82, 'b826083b-17a3-47aa-9b53-b982bcce04aa', 11, '2023-06-05 05:29:27.562259');
-INSERT INTO public.sessions VALUES (86, 'a9e3e997-674b-427d-80bf-fcfe9cd80d45', 12, '2023-06-05 20:57:02.692319');
 INSERT INTO public.sessions VALUES (31, '7ee0a700-95ee-4841-a68b-c6a34a53b919', 19, '2023-06-02 03:20:38.622648');
-INSERT INTO public.sessions VALUES (42, '0dd95b1f-7cc4-4b53-8afd-a1498b2f1052', 5, '2023-06-02 21:09:04.043702');
+
+
+--
+-- Data for Name: shares; Type: TABLE DATA; Schema: public; Owner: -
+--
+
 
 
 --
@@ -460,15 +656,17 @@ INSERT INTO public.trendings VALUES (3, 'react-native', 0);
 INSERT INTO public.trendings VALUES (4, 'material', 0);
 INSERT INTO public.trendings VALUES (5, 'web-dev', 0);
 INSERT INTO public.trendings VALUES (6, 'mobile', 0);
-INSERT INTO public.trendings VALUES (7, 'css', 0);
 INSERT INTO public.trendings VALUES (8, 'html', 0);
-INSERT INTO public.trendings VALUES (2, 'react', 2);
-INSERT INTO public.trendings VALUES (11, 'ProjetaoGrupo6', 1);
 INSERT INTO public.trendings VALUES (12, 'teste', 1);
-INSERT INTO public.trendings VALUES (13, 'projetao', 1);
-INSERT INTO public.trendings VALUES (1, 'javascript', 3);
 INSERT INTO public.trendings VALUES (10, 'sql', 1);
-INSERT INTO public.trendings VALUES (9, 'node', 5);
+INSERT INTO public.trendings VALUES (7, 'css', 1);
+INSERT INTO public.trendings VALUES (2, 'react', 3);
+INSERT INTO public.trendings VALUES (13, 'projetao', 2);
+INSERT INTO public.trendings VALUES (11, 'ProjetaoGrupo6', 3);
+INSERT INTO public.trendings VALUES (9, 'node', 14);
+INSERT INTO public.trendings VALUES (1, 'javascript', 5);
+INSERT INTO public.trendings VALUES (14, 'linux', 3);
+INSERT INTO public.trendings VALUES (15, 'linuxtips', 2);
 
 
 --
@@ -502,38 +700,59 @@ INSERT INTO public.users VALUES (24, 'aaa2', 'aaa15@aaa.com', 'data:image/jpeg;b
 
 
 --
+-- Name: comments_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.comments_id_seq', 1, false);
+
+
+--
+-- Name: follows_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.follows_id_seq', 1, false);
+
+
+--
 -- Name: likes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.likes_id_seq', 30, true);
+SELECT pg_catalog.setval('public.likes_id_seq', 51, true);
 
 
 --
 -- Name: posts_hashtag_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.posts_hashtag_id_seq', 14, true);
+SELECT pg_catalog.setval('public.posts_hashtag_id_seq', 35, true);
 
 
 --
 -- Name: posts_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.posts_id_seq', 105, true);
+SELECT pg_catalog.setval('public.posts_id_seq', 137, true);
 
 
 --
 -- Name: sessions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.sessions_id_seq', 86, true);
+SELECT pg_catalog.setval('public.sessions_id_seq', 128, true);
+
+
+--
+-- Name: shares_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.shares_id_seq', 1, false);
 
 
 --
 -- Name: trendings_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.trendings_id_seq', 13, true);
+SELECT pg_catalog.setval('public.trendings_id_seq', 15, true);
 
 
 --
@@ -541,6 +760,22 @@ SELECT pg_catalog.setval('public.trendings_id_seq', 13, true);
 --
 
 SELECT pg_catalog.setval('public.users_id_seq', 24, true);
+
+
+--
+-- Name: comments comments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.comments
+    ADD CONSTRAINT comments_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: follows follows_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.follows
+    ADD CONSTRAINT follows_pkey PRIMARY KEY (id);
 
 
 --
@@ -584,6 +819,14 @@ ALTER TABLE ONLY public.sessions
 
 
 --
+-- Name: shares shares_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shares
+    ADD CONSTRAINT shares_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: trendings trendings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -605,6 +848,38 @@ ALTER TABLE ONLY public.users
 
 ALTER TABLE ONLY public.users
     ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: comments comments_post_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.comments
+    ADD CONSTRAINT comments_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.posts(id);
+
+
+--
+-- Name: comments comments_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.comments
+    ADD CONSTRAINT comments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: follows follows_follower_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.follows
+    ADD CONSTRAINT follows_follower_id_fkey FOREIGN KEY (follower_id) REFERENCES public.users(id);
+
+
+--
+-- Name: follows follows_following_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.follows
+    ADD CONSTRAINT follows_following_id_fkey FOREIGN KEY (following_id) REFERENCES public.users(id);
 
 
 --
@@ -653,6 +928,22 @@ ALTER TABLE ONLY public.posts
 
 ALTER TABLE ONLY public.sessions
     ADD CONSTRAINT sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- Name: shares shares_post_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shares
+    ADD CONSTRAINT shares_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.posts(id);
+
+
+--
+-- Name: shares shares_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.shares
+    ADD CONSTRAINT shares_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
 
 
 --
