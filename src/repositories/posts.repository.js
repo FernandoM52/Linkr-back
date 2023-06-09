@@ -15,33 +15,33 @@ export async function createPostDB(
   return post;
 }
 
-export async function likePostById(userId, postId) {
-  const isLiked = await db.query(
-    `SELECT * FROM likes WHERE post_id = $1 AND user_id = $2`,
-    [postId, userId]
+export async function checkIfPostLikedDB(id, postId) {
+  const result = await db.query(
+    `SELECT COUNT(*) FROM likes WHERE user_id = $1 AND post_id = $2;`,
+    [id, postId]
   );
 
-  if (isLiked.rowCount > 0) {
-    await db.query(`DELETE FROM likes WHERE post_id = $1 AND user_id = $2`, [
-      postId,
-      userId,
-    ]);
+  const count = parseInt(result.rows[0].count);
+  return count > 0;
+}
 
-    await db.query(
-      `UPDATE posts SET likes_count = likes_count - 1 WHERE id = $1`,
-      [postId]
-    );
-  } else {
-    await db.query(`INSERT INTO likes (post_id, user_id) VALUES ($1, $2)`, [
-      postId,
-      userId,
-    ]);
+export async function likePostDB(id, postId) {
+  const likeCount = await db.query(`SELECT likes_count FROM posts WHERE id = $1;`, [postId]);
 
-    await db.query(
-      `UPDATE posts SET likes_count = likes_count + 1 WHERE id = $1`,
-      [postId]
-    );
-  }
+  await db.query(`INSERT INTO likes (user_id, post_id) VALUES ($1, $2);`, [id, postId]);
+
+  const newLikeCount = likeCount.rows[0].likes_count + 1;
+  console.log(newLikeCount);
+  await db.query(`UPDATE posts SET likes_count = $1 WHERE id = $2;`, [newLikeCount, postId]);
+}
+
+export async function unlikePostDB(id, postId) {
+  const likeCount = await db.query(`SELECT likes_count FROM posts WHERE id = $1;`, [postId]);
+
+  await db.query(`DELETE FROM likes WHERE user_id = $1 AND post_id = $2;`, [id, postId]);
+
+  const newLikeCount = likeCount.rows[0].likes_count - 1;
+  await db.query(`UPDATE posts SET likes_count = $1 WHERE id = $2;`, [newLikeCount, postId]);
 }
 
 export function getPostId(postId) {
@@ -63,4 +63,15 @@ export function getPostByUserId(userId) {
   WHERE posts.user_id = $1 ORDER BY date DESC`,
     [userId]
   );
+}
+
+export function getLikedPostsByUserDB(userId) {
+  const result = db.query(`
+    SELECT posts.*
+    FROM posts
+    INNER JOIN likes ON posts.id = likes.post_id
+    WHERE likes.user_id = $1;`,
+    [userId]
+  );
+  return result.rows;
 }

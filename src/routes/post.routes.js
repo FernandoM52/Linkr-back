@@ -10,10 +10,11 @@ import {
 
 const postRoutes = Router();
 
-postRoutes.post("/home", tokenValidate, newPost);
+postRoutes.use(tokenValidate);
+postRoutes.post("/home", newPost);
+postRoutes.post("/like/:postId", likePost);
 postRoutes.get("/home", getPost);
 postRoutes.get("/posts/:id", getPostById);
-postRoutes.post("/like/:postId", tokenValidate, likePost);
-postRoutes.delete("/home/:id", tokenValidate, deletePost);
+postRoutes.delete("/home/:id", deletePost);
 
 export default postRoutes;

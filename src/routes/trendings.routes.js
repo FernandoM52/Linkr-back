@@ -5,7 +5,8 @@ import { getTrendings, getPostsByTrending } from "../controllers/trendings.contr
 
 const trendingRouter = Router();
 
+trendingRouter.use(tokenValidate)
 trendingRouter.get("/trendings", getTrendings);
-trendingRouter.get("/hashtag/:hashtag", tokenValidate, getPostsByTrending);
+trendingRouter.get("/hashtag/:hashtag", getPostsByTrending);
 
 export default trendingRouter;
