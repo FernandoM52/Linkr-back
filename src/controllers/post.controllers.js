@@ -3,9 +3,11 @@ import { db } from "../database/db.connection.js";
 import { postSchema } from "../schemas/post.schema.js";
 import {
   createPostDB,
-  likePostById,
+  likePostDB,
   getPostId,
   getPostByUserId,
+  unlikePostDB,
+  checkIfPostLikedDB,
 } from "../repositories/posts.repository.js";
 import {
   createTrendingDB,
@@ -143,15 +145,19 @@ export async function likePost(req, res) {
   const { postId } = req.params;
   const { id } = res.locals.user;
 
+  if (!id) {
+    return res.status(400).send("User ID is missing");
+  }
   try {
-    if (!id) {
-      return res.status(400).send("User ID is missing");
+    const isLiked = await checkIfPostLikedDB(id, postId);
+    if (isLiked) {
+      await unlikePostDB(id, postId);
+      return res.send({ liked: false });
+    } else {
+      await likePostDB(id, postId);
+      return res.send({ liked: true });
     }
-
-    await likePostById(id, postId);
-    return res.send();
   } catch (error) {
-    console.log(error.message);
     return res.status(500).send(error.message);
   }
 }
