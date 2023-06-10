@@ -90,6 +90,33 @@ export async function getPost(req, res) {
   }
 }
 
+export async function editPost(req, res) {
+  const { id } = req.params;
+  const user = res.locals.user;
+  const { content } = req.body;
+
+  if (!id) return res.status(404).send("Post doesn't exist");
+  try {
+     const verifyOwner = await db.query(
+      `SELECT user_id, id FROM posts WHERE user_id = $1 and id = $2`,
+      [user.id, id]
+     );
+    if (!verifyOwner.rowCount) return res.sendStatus(401);
+    const editPost = await db.query(`UPDATE posts SET content = $1 WHERE id = $2`, [content, id]);
+    if (!editPost.rowCount) return res.sendStatus(400);
+    res.sendStatus(200);
+  } catch (err) {
+    console.error(err);
+    if (err.details) {
+      const errs = err.details.map((detail) => detail.message);
+      return res.status(422).send(errs);
+    } else {
+      return res.status(500).send("Internal server error");
+    }
+  }
+  
+}
+
 export async function deletePost(req, res) {
   const { id } = req.params;
   const user = res.locals.user;

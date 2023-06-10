@@ -6,6 +6,7 @@ import {
   likePost,
   getPostById,
   deletePost,
+  editPost,
 } from "../controllers/post.controllers.js";
 
 const postRoutes = Router();
@@ -15,5 +16,6 @@ postRoutes.get("/home", getPost);
 postRoutes.get("/posts/:id", getPostById);
 postRoutes.post("/like/:postId", tokenValidate, likePost);
 postRoutes.delete("/home/:id", tokenValidate, deletePost);
+postRoutes.put("/home/:id", tokenValidate, editPost);
 
 export default postRoutes;
